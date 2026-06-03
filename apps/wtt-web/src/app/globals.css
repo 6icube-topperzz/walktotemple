@@ -1,0 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --saffron: #FF9933;
+  --saffron-dark: #E8870A;
+  --saffron-light: #FFB366;
+  --gold: #FFD700;
+  --gold-light: #FFF0A0;
+  --maroon: #8B0000;
+  --maroon-light: #A50000;
+  --cream: #FFF8F0;
+  --hero: #1E293B;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  background: #ffffff;
+  color: #111827;
+}
+
+h1, h2, h3 {
+  font-family: 'Crimson Text', Georgia, serif;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: #FF9933; border-radius: 3px; }
+
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+@layer components {
+  .carousel-arrow {
+    @apply absolute top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full
+           bg-white shadow-lg flex items-center justify-center
+           text-gray-700 hover:bg-saffron hover:text-white transition-all cursor-pointer;
+  }
+}

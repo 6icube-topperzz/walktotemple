@@ -1,0 +1,23 @@
+{
+  "name": "walktotemple",
+  "version": "0.0.1",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20.9.0",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "db:generate": "pnpm --filter @wtt/contracts db:generate",
+    "db:migrate": "pnpm --filter @wtt/contracts db:migrate",
+    "db:push": "pnpm --filter @wtt/contracts db:push"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.0"
+  }
+}
