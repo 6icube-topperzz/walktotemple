@@ -10,7 +10,9 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@6icube/ui": "file:C:/dev/6icube-liskoss/packages/6icube-shared/ui",
     "@wtt/contracts": "workspace:*",
+    "axios": "^1.17.0",
     "framer-motion": "^12.40.0",
     "next": "^16.2.7",
     "react": "^18.3.1",

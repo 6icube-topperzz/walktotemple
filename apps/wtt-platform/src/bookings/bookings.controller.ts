@@ -17,8 +17,14 @@ export class BookingsController {
     return this.svc.confirm(body.bookingId, body.razorpayPaymentId)
   }
 
-  @Get()
+  // Alias used by the web app and the standard test: GET /bookings/my-bookings
+  @Get('my-bookings')
   async myBookings(@CurrentUser() user: any): Promise<any[]> {
+    return this.svc.findByUser(user.id)
+  }
+
+  @Get()
+  async list(@CurrentUser() user: any): Promise<any[]> {
     return this.svc.findByUser(user.id)
   }
 

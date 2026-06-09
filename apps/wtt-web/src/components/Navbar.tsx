@@ -1,7 +1,10 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useAuth } from '../hooks/useAuth'
+import { AuthLauncher, type AuthLauncherRef } from '@6icube/ui'
+import { theme, brand } from '@/theme.config'
 
 // ── CSS triangle — inherits text color, rotates when open ─────────────────────
 function Triangle({ isOpen }: { isOpen: boolean }) {
@@ -474,6 +477,8 @@ const TRENDING = ['Tirupati', 'Yadadri', 'Srisailam', 'Kedarnath', 'Varanasi', '
 // ── Main Navbar ───────────────────────────────────────────────────────────────
 export default function Navbar() {
   const pathname = usePathname()
+  const { state, logout, login } = useAuth()
+  const launcherRef = useRef<AuthLauncherRef>(null)
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -492,6 +497,32 @@ export default function Navbar() {
   function isActive(prefix: string) {
     return pathname.startsWith(prefix)
   }
+
+  const AUTH_BASE = process.env.NEXT_PUBLIC_AUTH_BASE ?? 'http://localhost:4008/api/v1'
+
+  const onNavSubmit = useCallback(async (mode: 'login' | 'register', values: { email: string; password: string; fullName?: string }) => {
+    if (mode === 'login') {
+      await login(values.email, values.password)
+    } else {
+      const res = await fetch(`${AUTH_BASE}/auth/register/email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: values.email,
+          password: values.password,
+          name: values.fullName?.trim() || undefined,
+          app_id: process.env.NEXT_PUBLIC_APP_ID ?? 'wtt',
+        }),
+      })
+      if (!res.ok) throw new Error('Registration failed. The email may already be in use.')
+      window.location.href = '/login'
+    }
+  }, [login, AUTH_BASE])
+
+  const onGoogle = useCallback(() => {
+    window.location.href = `${AUTH_BASE}/auth/google`
+  }, [AUTH_BASE])
 
   return (
     <header className="sticky top-0 z-50 w-full shadow-md">
@@ -551,12 +582,38 @@ export default function Navbar() {
 
           {/* Desktop auth */}
           <div className="hidden md:flex items-center gap-2 shrink-0">
-            <Link href="/my-bookings" className="text-sm text-gray-600 hover:text-saffron px-3 py-2 font-medium transition-colors whitespace-nowrap">
-              My Bookings
-            </Link>
-            <Link href="/auth/login" className="text-sm border border-gray-300 hover:border-saffron text-gray-700 hover:text-saffron px-4 py-1.5 rounded-full transition-colors whitespace-nowrap">
-              Login
-            </Link>
+            {state.isLoading ? (
+              <div className="w-24 h-8 bg-gray-100 rounded-full animate-pulse" />
+            ) : state.isLoggedIn && state.user ? (
+              <>
+                <Link href="/my-bookings" className="text-sm text-gray-600 hover:text-saffron px-3 py-2 font-medium transition-colors whitespace-nowrap">
+                  My Bookings
+                </Link>
+                <span className="text-sm text-gray-700 font-medium px-2 whitespace-nowrap">
+                  {state.user.name?.split(' ')[0]}
+                </span>
+                <button
+                  onClick={() => logout()}
+                  className="text-sm border border-gray-300 hover:border-red-400 text-gray-600 hover:text-red-500 px-4 py-1.5 rounded-full transition-colors whitespace-nowrap"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <AuthLauncher
+                  ref={launcherRef}
+                  triggerLabel="Sign In"
+                  triggerClassName="text-sm border border-gray-300 hover:border-saffron text-gray-700 hover:text-saffron px-4 py-1.5 rounded-full transition-colors whitespace-nowrap"
+                  brand={brand}
+                  theme={theme}
+                  showGoogle
+                  onSubmit={onNavSubmit}
+                  onGoogle={onGoogle}
+                  heading={{ login: 'Welcome back', register: 'Create account' }}
+                />
+              </>
+            )}
             <Link href="/temples" className="text-sm bg-saffron hover:bg-saffron-dark text-white font-semibold px-5 py-2 rounded-full transition-colors flex items-center gap-1 whitespace-nowrap">
               Book Now <span>→</span>
             </Link>
@@ -653,9 +710,22 @@ export default function Navbar() {
 
           {/* Auth row */}
           <div className="px-5 py-4 border-t border-gray-100 flex gap-3">
-            <Link href="/auth/login" className="flex-1 text-center border border-saffron text-saffron py-2.5 rounded-full text-sm font-medium">
-              Login
-            </Link>
+            {state.isLoggedIn && state.user ? (
+              <button
+                onClick={() => logout()}
+                className="flex-1 text-center border border-gray-300 text-gray-600 py-2.5 rounded-full text-sm font-medium"
+              >
+                Logout ({state.user.name?.split(' ')[0]})
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => { setMobileOpen(false); launcherRef.current?.open() }}
+                className="flex-1 text-center border border-saffron text-saffron py-2.5 rounded-full text-sm font-medium"
+              >
+                Sign In
+              </button>
+            )}
             <Link href="/temples" className="flex-1 text-center bg-saffron text-white py-2.5 rounded-full text-sm font-semibold">
               Book Now
             </Link>

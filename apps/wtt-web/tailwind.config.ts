@@ -1,7 +1,17 @@
 import type { Config } from 'tailwindcss'
 
 const config: Config = {
-  content: ['./src/**/*.{ts,tsx}'],
+  content: [
+    './src/**/*.{ts,tsx}',
+    './node_modules/@6icube/ui/src/**/*.{ts,tsx}',
+  ],
+  safelist: [
+    'bg-[var(--brand)]', 'bg-[var(--brand-hover)]', 'bg-[var(--surface)]',
+    'ring-[var(--brand-ring)]',
+    'text-[var(--brand)]', 'text-[var(--brand-fg)]', 'text-[var(--muted)]', 'text-[var(--surface-fg)]',
+    'hover:bg-[var(--brand-hover)]', 'hover:text-[var(--brand)]', 'hover:text-[var(--surface-fg)]',
+  ],
+  presets: [require('./node_modules/@6icube/ui/tailwind-preset')],
   theme: {
     extend: {
       colors: {

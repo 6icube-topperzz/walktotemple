@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>6icube Ecosystem — Database Schema</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0A0C10;
+  --surface: #111318;
+  --surface2: #181C24;
+  --border: #1F2430;
+  --border2: #2A3040;
+  --text: #E2E8F0;
+  --muted: #64748B;
+  --bright: #F8FAFC;
+
+  --cb: #F97316;
+  --cb-bg: #1A0F05;
+  --cb-border: #7C2D12;
+
+  --wtt: #A855F7;
+  --wtt-bg: #120A1A;
+  --wtt-border: #581C87;
+
+  --trz: #22C55E;
+  --trz-bg: #051A0D;
+  --trz-border: #14532D;
+
+  --tal: #3B82F6;
+  --tal-bg: #05101A;
+  --tal-border: #1E3A5F;
+
+  --shared: #F59E0B;
+  --shared-bg: #1A1005;
+  --shared-border: #78350F;
+
+  --pk: #EF4444;
+  --fk: #06B6D4;
+  --idx: #84CC16;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ── TOP NAV ── */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,12,16,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex; align-items: center; gap: 0;
+  height: 52px;
+}
+.topbar-brand {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px; font-weight: 800;
+  color: var(--bright);
+  margin-right: 32px;
+  white-space: nowrap;
+}
+.topbar-brand span { color: var(--shared); }
+.nav-tabs { display: flex; gap: 2px; overflow-x: auto; }
+.nav-tab {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  transition: all 150ms;
+  text-decoration: none;
+  color: var(--muted);
+}
+.nav-tab:hover { color: var(--text); background: var(--surface2); }
+.nav-tab.cb { color: var(--cb); }
+.nav-tab.wtt { color: var(--wtt); }
+.nav-tab.trz { color: var(--trz); }
+.nav-tab.tal { color: var(--tal); }
+.nav-tab.shared { color: var(--shared); }
+.nav-tab.active { border-color: currentColor; background: var(--surface2); }
+
+/* ── HERO ── */
+.hero {
+  padding: 48px 32px 32px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, #0A0C10 0%, #0F1218 100%);
+}
+.hero h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 32px; font-weight: 800;
+  color: var(--bright);
+  margin-bottom: 8px;
+}
+.hero p { color: var(--muted); font-size: 14px; max-width: 600px; }
+.stats-row {
+  display: flex; gap: 24px; margin-top: 24px; flex-wrap: wrap;
+}
+.stat-pill {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  font-size: 12px;
+}
+.stat-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px; font-weight: 700;
+}
+
+/* ── LEGEND ── */
+.legend {
+  display: flex; gap: 16px; flex-wrap: wrap;
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.legend-item {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--muted);
+}
+.legend-dot {
+  width: 10px; height: 10px;
+  border-radius: 2px;
+}
+
+/* ── MAIN LAYOUT ── */
+.main { display: flex; min-height: calc(100vh - 52px); }
+
+.sidebar {
+  width: 240px; min-width: 240px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 16px 0;
+  position: sticky; top: 52px;
+  height: calc(100vh - 52px);
+  overflow-y: auto;
+}
+.sidebar-section {
+  padding: 8px 16px 4px;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 8px;
+}
+.sidebar-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 16px;
+  font-size: 12px; font-family: 'JetBrains Mono', monospace;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 120ms;
+  text-decoration: none;
+  border-left: 2px solid transparent;
+}
+.sidebar-item:hover { color: var(--text); background: var(--surface2); }
+.sidebar-item.cb { border-left-color: var(--cb); color: var(--cb); }
+.sidebar-item.wtt { border-left-color: var(--wtt); color: var(--wtt); }
+.sidebar-item.trz { border-left-color: var(--trz); color: var(--trz); }
+.sidebar-item.tal { border-left-color: var(--tal); color: var(--tal); }
+.sidebar-item.shared { border-left-color: var(--shared); color: var(--shared); }
+.count-badge {
+  margin-left: auto;
+  font-size: 10px; padding: 1px 6px;
+  border-radius: 10px;
+  background: var(--surface2);
+  color: var(--muted);
+}
+
+/* ── CONTENT ── */
+.content { flex: 1; padding: 32px; overflow-y: auto; max-width: 1100px; }
+
+/* ── APP SECTION ── */
+.app-section { margin-bottom: 64px; }
+.app-header {
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 32px;
+  padding: 20px 24px;
+  border-radius: 12px;
+  border: 1px solid;
+}
+.app-header.cb { background: var(--cb-bg); border-color: var(--cb-border); }
+.app-header.wtt { background: var(--wtt-bg); border-color: var(--wtt-border); }
+.app-header.trz { background: var(--trz-bg); border-color: var(--trz-border); }
+.app-header.tal { background: var(--tal-bg); border-color: var(--tal-border); }
+.app-header.shared { background: var(--shared-bg); border-color: var(--shared-border); }
+.app-icon {
+  width: 48px; height: 48px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.app-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px; font-weight: 800;
+  color: var(--bright);
+}
+.app-subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.app-table-count {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 24px; font-weight: 700;
+}
+
+/* ── TABLE CARD ── */
+.table-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+.table-card-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 20px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.table-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px; font-weight: 700;
+  color: var(--bright);
+}
+.table-purpose {
+  font-size: 12px; color: var(--muted);
+  flex: 1;
+}
+.table-color-bar {
+  width: 4px; height: 32px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.table-rows-badge {
+  font-size: 11px; padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+.lookups-badge {
+  font-size: 11px; padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(6,182,212,0.1);
+  color: var(--fk);
+  border: 1px solid rgba(6,182,212,0.2);
+}
+
+/* ── FIELD TABLE ── */
+.field-table { width: 100%; border-collapse: collapse; }
+.field-table th {
+  padding: 8px 20px;
+  text-align: left;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.field-table td {
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.field-table tr:last-child td { border-bottom: none; }
+.field-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+.field-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; font-weight: 600;
+  color: var(--bright);
+  white-space: nowrap;
+}
+.field-type {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--muted);
+  white-space: nowrap;
+}
+.field-desc { font-size: 12px; color: var(--text); line-height: 1.5; }
+.field-link { font-size: 11px; color: var(--fk); font-family: 'JetBrains Mono', monospace; }
+.field-used { font-size: 11px; color: var(--muted); }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 7px; border-radius: 4px;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-right: 4px;
+}
+.badge-pk { background: rgba(239,68,68,0.15); color: var(--pk); border: 1px solid rgba(239,68,68,0.3); }
+.badge-fk { background: rgba(6,182,212,0.15); color: var(--fk); border: 1px solid rgba(6,182,212,0.3); }
+.badge-idx { background: rgba(132,204,22,0.15); color: var(--idx); border: 1px solid rgba(132,204,22,0.3); }
+.badge-req { background: rgba(248,113,0,0.12); color: #fb923c; border: 1px solid rgba(248,113,0,0.25); }
+.badge-opt { background: rgba(100,116,139,0.15); color: var(--muted); border: 1px solid var(--border); }
+.badge-arr { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
+
+/* ── LOOKUP SECTION ── */
+.lookup-box {
+  padding: 12px 20px;
+  background: rgba(6,182,212,0.04);
+  border-top: 1px solid rgba(6,182,212,0.15);
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+}
+.lookup-label {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--fk); margin-right: 4px;
+}
+.lookup-chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; padding: 3px 10px;
+  border-radius: 4px;
+  background: rgba(6,182,212,0.1);
+  color: var(--fk);
+  border: 1px solid rgba(6,182,212,0.2);
+}
+
+/* ── RELATIONSHIPS CHART ── */
+.rel-section {
+  margin-top: 48px; margin-bottom: 64px;
+}
+.rel-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px; font-weight: 700;
+  color: var(--bright);
+  margin-bottom: 20px;
+}
+.rel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.rel-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+.rel-card-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; font-weight: 700;
+  color: var(--bright);
+  margin-bottom: 10px;
+}
+.rel-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}
+.rel-from { color: var(--text); }
+.rel-arrow { color: var(--border2); }
+.rel-to { color: var(--fk); }
+.rel-type { color: var(--muted); font-size: 10px; margin-left: auto; }
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="topbar-brand">6icube <span>Schema</span></div>
+  <div class="nav-tabs">
+    <a href="#shared" class="nav-tab shared">Shared</a>
+    <a href="#cb" class="nav-tab cb">CrunchBasket</a>
+    <a href="#wtt" class="nav-tab wtt">WalkToTemple</a>
+    <a href="#trz" class="nav-tab trz">Travenzz</a>
+    <a href="#tal" class="nav-tab tal">Talenzz</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>6icube Ecosystem — Database Schema</h1>
+  <p>Complete field-level documentation for all tables across CrunchBasket, WalkToTemple, Travenzz, and Talenzz. Includes field types, purposes, foreign key relationships, and lookup dependencies.</p>
+  <div class="stats-row">
+    <div class="stat-pill"><span class="stat-num" style="color:var(--shared)">82</span> Total Tables</div>
+    <div class="stat-pill"><span class="stat-num" style="color:var(--cb)">18</span> CrunchBasket</div>
+    <div class="stat-pill"><span class="stat-num" style="color:var(--wtt)">22</span> WalkToTemple</div>
+    <div class="stat-pill"><span class="stat-num" style="color:var(--trz)">17</span> Travenzz</div>
+    <div class="stat-pill"><span class="stat-num" style="color:var(--tal)">16</span> Talenzz</div>
+    <div class="stat-pill"><span class="stat-num" style="color:var(--shared)">9</span> Shared/Admin</div>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--pk)"></div> Primary Key (PK)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--fk)"></div> Foreign Key (FK)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--idx)"></div> Indexed</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#fb923c"></div> Required</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--muted)"></div> Optional / Nullable</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#c084fc"></div> Array / JSONB</div>
+</div>
+
+<div class="main">
+<nav class="sidebar">
+  <div class="sidebar-section">Shared</div>
+  <a href="#users" class="sidebar-item shared">users <span class="count-badge">12</span></a>
+  <a href="#otp" class="sidebar-item shared">otp_verifications</a>
+  <a href="#sessions" class="sidebar-item shared">sessions</a>
+  <a href="#addresses" class="sidebar-item shared">addresses</a>
+  <a href="#notifications" class="sidebar-item shared">notifications</a>
+
+  <div class="sidebar-section">CrunchBasket</div>
+  <a href="#cb_vendors" class="sidebar-item cb">cb_vendors</a>
+  <a href="#cb_products" class="sidebar-item cb">cb_products</a>
+  <a href="#cb_product_variants" class="sidebar-item cb">cb_product_variants</a>
+  <a href="#cb_product_images" class="sidebar-item cb">cb_product_images</a>
+  <a href="#cb_product_customizations" class="sidebar-item cb">cb_product_customizations</a>
+  <a href="#cb_cart" class="sidebar-item cb">cb_cart</a>
+  <a href="#cb_cart_items" class="sidebar-item cb">cb_cart_items</a>
+  <a href="#cb_orders" class="sidebar-item cb">cb_orders</a>
+  <a href="#cb_order_items" class="sidebar-item cb">cb_order_items</a>
+  <a href="#cb_gift_boxes" class="sidebar-item cb">cb_gift_boxes</a>
+  <a href="#cb_gift_box_items" class="sidebar-item cb">cb_gift_box_items</a>
+  <a href="#cb_corporate_orders" class="sidebar-item cb">cb_corporate_orders</a>
+  <a href="#cb_wishlists" class="sidebar-item cb">cb_wishlists</a>
+  <a href="#cb_reviews" class="sidebar-item cb">cb_reviews</a>
+  <a href="#cb_regional_pages" class="sidebar-item cb">cb_regional_pages</a>
+  <a href="#cb_festival_pages" class="sidebar-item cb">cb_festival_pages</a>
+
+  <div class="sidebar-section">WalkToTemple</div>
+  <a href="#wtt_packages" class="sidebar-item wtt">wtt_packages</a>
+  <a href="#wtt_itinerary_days" class="sidebar-item wtt">wtt_itinerary_days</a>
+  <a href="#wtt_itinerary_activities" class="sidebar-item wtt">wtt_itinerary_activities</a>
+  <a href="#wtt_departure_dates" class="sidebar-item wtt">wtt_departure_dates</a>
+  <a href="#wtt_pickup_points" class="sidebar-item wtt">wtt_pickup_points</a>
+  <a href="#wtt_bookings" class="sidebar-item wtt">wtt_bookings</a>
+  <a href="#wtt_travellers" class="sidebar-item wtt">wtt_travellers</a>
+  <a href="#wtt_pooja_products" class="sidebar-item wtt">wtt_pooja_products</a>
+  <a href="#wtt_trusts" class="sidebar-item wtt">wtt_trusts</a>
+  <a href="#wtt_donation_types" class="sidebar-item wtt">wtt_donation_types</a>
+  <a href="#wtt_donations" class="sidebar-item wtt">wtt_donations</a>
+  <a href="#wtt_gift_products" class="sidebar-item wtt">wtt_gift_products</a>
+  <a href="#wtt_print_products" class="sidebar-item wtt">wtt_print_products</a>
+  <a href="#wtt_print_orders" class="sidebar-item wtt">wtt_print_orders</a>
+  <a href="#wtt_lit_products" class="sidebar-item wtt">wtt_lit_products</a>
+  <a href="#wtt_reviews" class="sidebar-item wtt">wtt_reviews</a>
+  <a href="#wtt_deity_pages" class="sidebar-item wtt">wtt_deity_pages</a>
+
+  <div class="sidebar-section">Travenzz</div>
+  <a href="#trz_packages" class="sidebar-item trz">trz_packages</a>
+  <a href="#trz_itinerary_days" class="sidebar-item trz">trz_itinerary_days</a>
+  <a href="#trz_departure_dates" class="sidebar-item trz">trz_departure_dates</a>
+  <a href="#trz_pickup_points" class="sidebar-item trz">trz_pickup_points</a>
+  <a href="#trz_bookings" class="sidebar-item trz">trz_bookings</a>
+  <a href="#trz_travellers" class="sidebar-item trz">trz_travellers</a>
+  <a href="#trz_hotels" class="sidebar-item trz">trz_hotels</a>
+  <a href="#trz_guides" class="sidebar-item trz">trz_guides</a>
+  <a href="#trz_vehicles" class="sidebar-item trz">trz_vehicles</a>
+  <a href="#trz_restaurants" class="sidebar-item trz">trz_restaurants</a>
+  <a href="#trz_marketplace_products" class="sidebar-item trz">trz_marketplace_products</a>
+  <a href="#trz_marketplace_orders" class="sidebar-item trz">trz_marketplace_orders</a>
+  <a href="#trz_reviews" class="sidebar-item trz">trz_reviews</a>
+  <a href="#trz_seasonal_pages" class="sidebar-item trz">trz_seasonal_pages</a>
+  <a href="#trz_region_pages" class="sidebar-item trz">trz_region_pages</a>
+
+  <div class="sidebar-section">Talenzz</div>
+  <a href="#tal_profiles" class="sidebar-item tal">tal_profiles</a>
+  <a href="#tal_jobs" class="sidebar-item tal">tal_jobs</a>
+  <a href="#tal_prep_sessions" class="sidebar-item tal">tal_prep_sessions</a>
+  <a href="#tal_prep_questions" class="sidebar-item tal">tal_prep_questions</a>
+  <a href="#tal_mock_interviews" class="sidebar-item tal">tal_mock_interviews</a>
+  <a href="#tal_recruiters" class="sidebar-item tal">tal_recruiters</a>
+  <a href="#tal_candidate_views" class="sidebar-item tal">tal_candidate_views</a>
+  <a href="#tal_outreach_messages" class="sidebar-item tal">tal_outreach_messages</a>
+  <a href="#tal_referrals" class="sidebar-item tal">tal_referrals</a>
+  <a href="#tal_company_intel" class="sidebar-item tal">tal_company_intel</a>
+  <a href="#tal_domain_intel" class="sidebar-item tal">tal_domain_intel</a>
+  <a href="#tal_score_history" class="sidebar-item tal">tal_score_history</a>
+  <a href="#tal_payments" class="sidebar-item tal">tal_payments</a>
+</nav>
+
+<div class="content">
+
+<!-- ═══════════════════════════════════════════ SHARED ═══ -->
+<section id="shared" class="app-section">
+  <div class="app-header shared">
+    <div class="app-icon" style="background:rgba(245,158,11,0.15); color:var(--shared)">🔗</div>
+    <div>
+      <div class="app-title">Shared Tables</div>
+      <div class="app-subtitle">Used across all apps via 6icube-auth microservice. Every app references these.</div>
+    </div>
+    <div class="app-table-count" style="color:var(--shared)">5 tables</div>
+  </div>
+
+  <!-- users -->
+  <div id="users" class="table-card">
+    <div class="table-card-header">
+      <div class="table-color-bar" style="background:var(--shared)"></div>
+      <div class="table-name">users</div>
+      <div class="table-purpose">Core identity table. Every person who interacts with any app — customer, vendor, admin, guide, recruiter — has exactly one row here.</div>
+      <span class="lookups-badge">↑ Referenced by 40+ tables</span>
+    </div>
+    <table class="field-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Flags</th><th>What it stores</th><th>Linked to / Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">id</td><td class="field-type">uuid</td><td><span class="badge badge-pk">PK</span></td><td class="field-desc">Unique identifier for every user across the entire ecosystem.</td><td class="field-link">All user_id FKs in every table</td></tr>
+        <tr><td class="field-name">email</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span><span class="badge badge-idx">IDX</span></td><td class="field-desc">Primary login identifier. Must be unique per app_id scope.</td><td class="field-link">otp_verifications, sessions</td></tr>
+        <tr><td class="field-name">phone</td><td class="field-type">varchar</td><td><span class="badge badge-opt">OPT</span></td><td class="field-desc">Mobile number for WhatsApp notifications and OTP login.</td><td class="field-link">notifications (channel=whatsapp)</td></tr>
+        <tr><td class="field-name">name</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Display name shown in dashboards, order confirmations, and reviews.</td><td class="field-link">All dashboards, receipts</td></tr>
+        <tr><td class="field-name">avatar</td><td class="field-type">varchar</td><td><span class="badge badge-opt">OPT</span></td><td class="field-desc">Cloudflare R2 URL to profile picture.</td><td class="field-link">Profile displays across apps</td></tr>
+        <tr><td class="field-name">role</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">customer | vendor | admin | super_admin | guide | recruiter. Controls what dashboards and API routes the user can access.</td><td class="field-link">All role-based auth checks</td></tr>
+        <tr><td class="field-name">app_id</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span><span class="badge badge-idx">IDX</span></td><td class="field-desc">cb | wtt | travenzz | talenzz. Scopes the user to one app. Same email can register on multiple apps as separate users.</td><td class="field-link">All cross-app auth decisions</td></tr>
+        <tr><td class="field-name">is_verified</td><td class="field-type">boolean</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Whether the user has confirmed their email or phone via OTP.</td><td class="field-link">Order placement, booking confirmation gates</td></tr>
+        <tr><td class="field-name">is_active</td><td class="field-type">boolean</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Soft disable flag. false = user blocked but data preserved.</td><td class="field-link">Auth middleware checks</td></tr>
+        <tr><td class="field-name">google_id</td><td class="field-type">varchar</td><td><span class="badge badge-opt">OPT</span></td><td class="field-desc">Google OAuth sub claim. Null if email/password login only.</td><td class="field-link">Google OAuth callback handler</td></tr>
+        <tr><td class="field-name">created_at</td><td class="field-type">timestamp</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">When the user registered. Used for cohort analytics.</td><td class="field-link">Admin analytics dashboards</td></tr>
+        <tr><td class="field-name">updated_at</td><td class="field-type">timestamp</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Last profile update timestamp.</td><td class="field-link">Cache invalidation</td></tr>
+      </tbody>
+    </table>
+    <div class="lookup-box">
+      <span class="lookup-label">Looked up by →</span>
+      <span class="lookup-chip">cb_vendors.user_id</span>
+      <span class="lookup-chip">cb_orders.user_id</span>
+      <span class="lookup-chip">wtt_bookings.user_id</span>
+      <span class="lookup-chip">wtt_donations.user_id</span>
+      <span class="lookup-chip">trz_bookings.user_id</span>
+      <span class="lookup-chip">trz_guides.user_id</span>
+      <span class="lookup-chip">tal_profiles.user_id</span>
+      <span class="lookup-chip">tal_recruiters.user_id</span>
+      <span class="lookup-chip">notifications.user_id</span>
+      <span class="lookup-chip">addresses.user_id</span>
+    </div>
+  </div>
+
+  <!-- addresses -->
+  <div id="addresses" class="table-card">
+    <div class="table-card-header">
+      <div class="table-color-bar" style="background:var(--shared)"></div>
+      <div class="table-name">addresses</div>
+      <div class="table-purpose">Saved delivery addresses for CB orders, WTT pooja/print orders, and Travenzz marketplace orders. One user can have multiple addresses.</div>
+    </div>
+    <table class="field-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Flags</th><th>What it stores</th><th>Linked to / Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">id</td><td class="field-type">uuid</td><td><span class="badge badge-pk">PK</span></td><td class="field-desc">Unique address ID.</td><td class="field-link">cb_orders.delivery_address_id, wtt_print_orders.delivery_address_id, trz_marketplace_orders.delivery_address_id</td></tr>
+        <tr><td class="field-name">user_id</td><td class="field-type">uuid</td><td><span class="badge badge-fk">FK</span><span class="badge badge-req">REQ</span></td><td class="field-desc">Owner of this address. References users.id.</td><td class="field-link">users.id</td></tr>
+        <tr><td class="field-name">name</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Recipient name for this address (may differ from account name).</td><td class="field-link">Order delivery label</td></tr>
+        <tr><td class="field-name">phone</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Delivery contact number.</td><td class="field-link">Courier / dispatch system</td></tr>
+        <tr><td class="field-name">line1</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Flat/house number and street.</td><td class="field-link">Shipping label generation</td></tr>
+        <tr><td class="field-name">line2</td><td class="field-type">varchar</td><td><span class="badge badge-opt">OPT</span></td><td class="field-desc">Landmark or area name.</td><td class="field-link">Shipping label</td></tr>
+        <tr><td class="field-name">city</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">City for delivery zone routing and delivery fee calculation.</td><td class="field-link">Delivery fee rules</td></tr>
+        <tr><td class="field-name">state</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">State for GST calculation and inter-state delivery rules.</td><td class="field-link">GST logic</td></tr>
+        <tr><td class="field-name">pincode</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Pincode for serviceable area check and courier partner routing.</td><td class="field-link">Serviceability check API</td></tr>
+        <tr><td class="field-name">is_default</td><td class="field-type">boolean</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">true = pre-fill this address at checkout.</td><td class="field-link">Checkout flow pre-fill</td></tr>
+        <tr><td class="field-name">type</td><td class="field-type">varchar</td><td><span class="badge badge-opt">OPT</span></td><td class="field-desc">home | work | other — label shown in address list.</td><td class="field-link">Address list UI</td></tr>
+      </tbody>
+    </table>
+    <div class="lookup-box">
+      <span class="lookup-label">Looked up by →</span>
+      <span class="lookup-chip">cb_orders.delivery_address_id</span>
+      <span class="lookup-chip">wtt_pooja_orders.delivery_address_id</span>
+      <span class="lookup-chip">wtt_print_orders.delivery_address_id</span>
+      <span class="lookup-chip">trz_marketplace_orders.delivery_address_id</span>
+    </div>
+  </div>
+
+  <!-- notifications -->
+  <div id="notifications" class="table-card">
+    <div class="table-card-header">
+      <div class="table-color-bar" style="background:var(--shared)"></div>
+      <div class="table-name">notifications</div>
+      <div class="table-purpose">Central log of all notifications sent across all apps — order confirmations, booking updates, payment receipts, review requests — via email, SMS, WhatsApp, or push.</div>
+    </div>
+    <table class="field-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Flags</th><th>What it stores</th><th>Linked to / Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">id</td><td class="field-type">uuid</td><td><span class="badge badge-pk">PK</span></td><td class="field-desc">Unique notification record.</td><td class="field-link">—</td></tr>
+        <tr><td class="field-name">user_id</td><td class="field-type">uuid</td><td><span class="badge badge-fk">FK</span></td><td class="field-desc">Recipient. References users.id.</td><td class="field-link">users.id</td></tr>
+        <tr><td class="field-name">app_id</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">cb | wtt | travenzz | talenzz. Which app triggered this notification.</td><td class="field-link">Notification dashboard per app</td></tr>
+        <tr><td class="field-name">type</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">order | booking | payment | review | system. Categorizes the notification for inbox grouping.</td><td class="field-link">Notification inbox UI</td></tr>
+        <tr><td class="field-name">title</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Short notification headline. e.g., "Your order CB-2026-001 is confirmed!"</td><td class="field-link">Push notification title, email subject</td></tr>
+        <tr><td class="field-name">body</td><td class="field-type">text</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Full notification body text.</td><td class="field-link">Email body, WhatsApp message</td></tr>
+        <tr><td class="field-name">channel</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">email | sms | whatsapp | push. Which delivery channel was used.</td><td class="field-link">6icube-notify microservice routing</td></tr>
+        <tr><td class="field-name">status</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">sent | delivered | failed. Delivery status from channel provider (Resend, Twilio, etc).</td><td class="field-link">Admin notification status dashboard</td></tr>
+        <tr><td class="field-name">metadata</td><td class="field-type">jsonb</td><td><span class="badge badge-opt">OPT</span><span class="badge badge-arr">JSON</span></td><td class="field-desc">Extra context: {order_id, booking_id, amount}. Used to deep-link the notification to the relevant page.</td><td class="field-link">Deep link routing</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ CRUNCHBASKET ═══ -->
+<section id="cb" class="app-section">
+  <div class="app-header cb">
+    <div class="app-icon" style="background:rgba(249,115,22,0.15); color:var(--cb)">🧺</div>
+    <div>
+      <div class="app-title">CrunchBasket</div>
+      <div class="app-subtitle">Homemade traditional Indian food platform — vendors, products, orders, gifting, regional & festival content.</div>
+    </div>
+    <div class="app-table-count" style="color:var(--cb)">16 tables</div>
+  </div>
+
+  <!-- cb_vendors -->
+  <div id="cb_vendors" class="table-card">
+    <div class="table-card-header">
+      <div class="table-color-bar" style="background:var(--cb)"></div>
+      <div class="table-name">cb_vendors</div>
+      <div class="table-purpose">Home chefs and small food businesses. Every product on CB belongs to a vendor. Admin verifies vendors before they can sell.</div>
+      <span class="lookups-badge">↑ Referenced by cb_products, cb_orders</span>
+    </div>
+    <table class="field-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Flags</th><th>What it stores</th><th>Linked to / Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">id</td><td class="field-type">uuid</td><td><span class="badge badge-pk">PK</span></td><td class="field-desc">Unique vendor ID.</td><td class="field-link">cb_products.vendor_id, cb_orders.vendor_id</td></tr>
+        <tr><td class="field-name">user_id</td><td class="field-type">uuid</td><td><span class="badge badge-fk">FK</span><span class="badge badge-req">REQ</span></td><td class="field-desc">References the users table. The vendor logs in with this user account.</td><td class="field-link">users.id</td></tr>
+        <tr><td class="field-name">shop_name</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Brand name shown on product cards. e.g., "Godavari Kitchen".</td><td class="field-link">Product card, vendor page</td></tr>
+        <tr><td class="field-name">city / state / region</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Physical location of the vendor. region maps to regional page slugs (godavari, indore). Drives the regional filter on listing pages.</td><td class="field-link">cb_regional_pages.slug filter</td></tr>
+        <tr><td class="field-name">is_verified</td><td class="field-type">boolean</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Admin verification badge. Only verified vendors appear on the frontend.</td><td class="field-link">Product listing filter</td></tr>
+        <tr><td class="field-name">commission_rate</td><td class="field-type">decimal</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">CB's take percentage (15–20%). Used in order payout calculation.</td><td class="field-link">cb_orders payout engine</td></tr>
+        <tr><td class="field-name">upi_id / bank details</td><td class="field-type">varchar</td><td><span class="badge badge-opt">OPT</span></td><td class="field-desc">Payment details for vendor payouts after order delivery.</td><td class="field-link">Payout microservice</td></tr>
+        <tr><td class="field-name">rating / total_orders</td><td class="field-type">decimal/int</td><td><span class="badge badge-idx">IDX</span></td><td class="field-desc">Aggregated stats. Updated via triggers when reviews/orders are created. Used for sorting and featured vendor selection.</td><td class="field-link">Vendor sort, featured logic</td></tr>
+      </tbody>
+    </table>
+    <div class="lookup-box">
+      <span class="lookup-label">Looked up by →</span>
+      <span class="lookup-chip">cb_products.vendor_id</span>
+      <span class="lookup-chip">cb_orders.vendor_id</span>
+    </div>
+  </div>
+
+  <!-- cb_products -->
+  <div id="cb_products" class="table-card">
+    <div class="table-card-header">
+      <div class="table-color-bar" style="background:var(--cb)"></div>
+      <div class="table-name">cb_products</div>
+      <div class="table-purpose">The core product catalog. Every snack, sweet, pickle, spice, and millet item. Tags drive all filtering on listing pages — no code changes needed when admin adds new products.</div>
+      <span class="lookups-badge">↑ Referenced by 7 tables</span>
+    </div>
+    <table class="field-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Flags</th><th>What it stores</th><th>Linked to / Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">id</td><td class="field-type">uuid</td><td><span class="badge badge-pk">PK</span></td><td class="field-desc">Unique product ID.</td><td class="field-link">cb_product_variants, cb_product_images, cb_cart_items, cb_order_items, cb_reviews, cb_wishlists</td></tr>
+        <tr><td class="field-name">vendor_id</td><td class="field-type">uuid</td><td><span class="badge badge-fk">FK</span><span class="badge badge-req">REQ</span></td><td class="field-desc">Which vendor makes this product.</td><td class="field-link">cb_vendors.id</td></tr>
+        <tr><td class="field-name">name / name_regional</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">English name + regional language name (Telugu: వెల్లుల్లి కారం పొడి). Both shown on product card.</td><td class="field-link">Product card, SEO</td></tr>
+        <tr><td class="field-name">slug</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span><span class="badge badge-idx">IDX</span></td><td class="field-desc">URL-safe identifier. Used in /products/[slug] route. Must be unique.</td><td class="field-link">Frontend routing</td></tr>
+        <tr><td class="field-name">category</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span><span class="badge badge-idx">IDX</span></td><td class="field-desc">snacks | sweets | pickles | spices | millet. Maps to the main navbar tabs. Drives /snacks, /sweets etc. listing pages.</td><td class="field-link">Listing page filter queries</td></tr>
+        <tr><td class="field-name">sub_category</td><td class="field-type">varchar</td><td><span class="badge badge-opt">OPT</span><span class="badge badge-idx">IDX</span></td><td class="field-desc">More specific type: murukku | ladoo | mango-pickle | karam-podi. Drives /pickles/mango, /spices/karam-podi sub-pages.</td><td class="field-link">Sub-page filter queries</td></tr>
+        <tr><td class="field-name">region</td><td class="field-type">varchar</td><td><span class="badge badge-opt">OPT</span><span class="badge badge-idx">IDX</span></td><td class="field-desc">godavari | indore | lonavala etc. Must match cb_regional_pages.slug exactly. Drives Regional Specials filter row on listing pages.</td><td class="field-link">cb_regional_pages.slug, regional filter</td></tr>
+        <tr><td class="field-name">state</td><td class="field-type">varchar</td><td><span class="badge badge-opt">OPT</span><span class="badge badge-idx">IDX</span></td><td class="field-desc">andhra-pradesh | telangana | maharashtra etc. Drives the State filter row on listing pages.</td><td class="field-link">State filter row</td></tr>
+        <tr><td class="field-name">festival_tags</td><td class="field-type">text[]</td><td><span class="badge badge-opt">OPT</span><span class="badge badge-arr">ARRAY</span></td><td class="field-desc">["diwali", "sankranti", "bathukamma"]. Product appears on all matched festival pages. Admin just adds the tag — no route code changes needed.</td><td class="field-link">cb_festival_pages.slug filter</td></tr>
+        <tr><td class="field-name">spice_level</td><td class="field-type">integer</td><td><span class="badge badge-opt">OPT</span></td><td class="field-desc">1–5 scale. Used on /spices page to render 🌶️ icons and the spice filter (Mild/Medium/Hot/Extreme).</td><td class="field-link">Spice filter UI</td></tr>
+        <tr><td class="field-name">goes_well_with</td><td class="field-type">text[]</td><td><span class="badge badge-opt">OPT</span><span class="badge badge-arr">ARRAY</span></td><td class="field-desc">["rice", "idli", "dosa"]. Shown as tags on karam podi product cards.</td><td class="field-link">Product card tags</td></tr>
+        <tr><td class="field-name">is_active / is_featured</td><td class="field-type">boolean</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">is_active: admin toggle to show/hide. is_featured: appears in hero sections and curated collections.</td><td class="field-link">All listing queries filter by is_active=true</td></tr>
+      </tbody>
+    </table>
+    <div class="lookup-box">
+      <span class="lookup-label">Looked up by →</span>
+      <span class="lookup-chip">cb_product_variants.product_id</span>
+      <span class="lookup-chip">cb_product_images.product_id</span>
+      <span class="lookup-chip">cb_cart_items.product_id</span>
+      <span class="lookup-chip">cb_order_items.product_id</span>
+      <span class="lookup-chip">cb_reviews.product_id</span>
+      <span class="lookup-chip">cb_wishlists.product_id</span>
+      <span class="lookup-chip">cb_gift_box_items.product_id</span>
+    </div>
+  </div>
+
+  <!-- cb_product_variants -->
+  <div id="cb_product_variants" class="table-card">
+    <div class="table-card-header">
+      <div class="table-color-bar" style="background:var(--cb)"></div>
+      <div class="table-name">cb_product_variants</div>
+      <div class="table-purpose">Each product has multiple weight variants (250g, 500g, 1kg, 2kg, 5kg). Each variant has its own price and stock. Customer selects variant before adding to cart.</div>
+    </div>
+    <table class="field-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Flags</th><th>What it stores</th><th>Linked to / Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">id</td><td class="field-type">uuid</td><td><span class="badge badge-pk">PK</span></td><td class="field-desc">Unique variant ID.</td><td class="field-link">cb_cart_items.variant_id, cb_order_items.variant_id</td></tr>
+        <tr><td class="field-name">product_id</td><td class="field-type">uuid</td><td><span class="badge badge-fk">FK</span><span class="badge badge-req">REQ</span></td><td class="field-desc">Parent product this variant belongs to.</td><td class="field-link">cb_products.id</td></tr>
+        <tr><td class="field-name">weight_grams</td><td class="field-type">integer</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">250 | 500 | 1000 | 2000 | 5000. Displayed as weight cards on product detail page.</td><td class="field-link">Product detail weight selector</td></tr>
+        <tr><td class="field-name">price</td><td class="field-type">decimal</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Selling price for this weight. Stored in paise or rupees consistently.</td><td class="field-link">Cart total, order total</td></tr>
+        <tr><td class="field-name">compare_price</td><td class="field-type">decimal</td><td><span class="badge badge-opt">OPT</span></td><td class="field-desc">Original MRP shown as strikethrough for discount display.</td><td class="field-link">Discount % calculation on card</td></tr>
+        <tr><td class="field-name">prep_time_hours</td><td class="field-type">integer</td><td><span class="badge badge-opt">OPT</span></td><td class="field-desc">How long vendor needs to prepare this. 24 | 48 | 72 hours. Shown as "Ships in 2 days" on product page.</td><td class="field-link">Estimated delivery calculation</td></tr>
+        <tr><td class="field-name">stock_quantity</td><td class="field-type">integer</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Current available stock. Decremented on order placement. 0 = show "Out of Stock".</td><td class="field-link">Add to cart validation</td></tr>
+        <tr><td class="field-name">is_available</td><td class="field-type">boolean</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Manual vendor toggle to disable a variant temporarily (e.g., ingredient unavailable).</td><td class="field-link">Variant selector on product page</td></tr>
+      </tbody>
+    </table>
+    <div class="lookup-box">
+      <span class="lookup-label">Looked up by →</span>
+      <span class="lookup-chip">cb_cart_items.variant_id</span>
+      <span class="lookup-chip">cb_order_items.variant_id</span>
+      <span class="lookup-chip">cb_gift_box_items.variant_id</span>
+    </div>
+  </div>
+
+  <!-- cb_orders -->
+  <div id="cb_orders" class="table-card">
+    <div class="table-card-header">
+      <div class="table-color-bar" style="background:var(--cb)"></div>
+      <div class="table-name">cb_orders</div>
+      <div class="table-purpose">Every completed purchase on CrunchBasket. Created when customer confirms checkout. Stores full financial snapshot, payment IDs, delivery info, and current status.</div>
+    </div>
+    <table class="field-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Flags</th><th>What it stores</th><th>Linked to / Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">id</td><td class="field-type">uuid</td><td><span class="badge badge-pk">PK</span></td><td class="field-desc">Internal order ID.</td><td class="field-link">cb_order_items.order_id</td></tr>
+        <tr><td class="field-name">order_number</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span><span class="badge badge-idx">IDX</span></td><td class="field-desc">Human-readable: CB-2026-00001. Shown in emails, dashboards, and customer support.</td><td class="field-link">Customer dashboard, vendor dashboard</td></tr>
+        <tr><td class="field-name">user_id</td><td class="field-type">uuid</td><td><span class="badge badge-fk">FK</span><span class="badge badge-req">REQ</span></td><td class="field-desc">Customer who placed the order.</td><td class="field-link">users.id</td></tr>
+        <tr><td class="field-name">vendor_id</td><td class="field-type">uuid</td><td><span class="badge badge-fk">FK</span><span class="badge badge-req">REQ</span></td><td class="field-desc">Vendor fulfilling the order. One order per vendor (multi-vendor = multiple orders).</td><td class="field-link">cb_vendors.id</td></tr>
+        <tr><td class="field-name">status</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span><span class="badge badge-idx">IDX</span></td><td class="field-desc">pending → confirmed → preparing → ready → dispatched → delivered | cancelled. Drives both customer and vendor dashboards.</td><td class="field-link">Customer order tracker, vendor dashboard</td></tr>
+        <tr><td class="field-name">razorpay_order_id / payment_id</td><td class="field-type">varchar</td><td><span class="badge badge-opt">OPT</span></td><td class="field-desc">Razorpay IDs for payment verification and refund processing. Stored immediately, never recalculated.</td><td class="field-link">6icube-payments microservice</td></tr>
+        <tr><td class="field-name">delivery_address_id</td><td class="field-type">uuid</td><td><span class="badge badge-fk">FK</span><span class="badge badge-req">REQ</span></td><td class="field-desc">Snapshot reference to delivery address. Address may change later but order preserves delivery location.</td><td class="field-link">addresses.id</td></tr>
+        <tr><td class="field-name">subtotal / delivery_fee / discount / total</td><td class="field-type">decimal</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Financial snapshot at time of order. Never recalculated from products (prices may change). Immutable after order confirmed.</td><td class="field-link">Invoice generation, payout calculation</td></tr>
+      </tbody>
+    </table>
+    <div class="lookup-box">
+      <span class="lookup-label">Looked up by →</span>
+      <span class="lookup-chip">cb_order_items.order_id</span>
+      <span class="lookup-chip">cb_reviews.order_id</span>
+      <span class="lookup-chip">notifications (order updates)</span>
+    </div>
+  </div>
+
+  <!-- cb_reviews -->
+  <div id="cb_reviews" class="table-card">
+    <div class="table-card-header">
+      <div class="table-color-bar" style="background:var(--cb)"></div>
+      <div class="table-name">cb_reviews</div>
+      <div class="table-purpose">Customer reviews for products. Only customers with a delivered order for that product can leave a verified review. Rating aggregates back to cb_products.rating.</div>
+    </div>
+    <table class="field-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Flags</th><th>What it stores</th><th>Linked to / Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">product_id</td><td class="field-type">uuid</td><td><span class="badge badge-fk">FK</span><span class="badge badge-req">REQ</span></td><td class="field-desc">Which product is being reviewed.</td><td class="field-link">cb_products.id</td></tr>
+        <tr><td class="field-name">order_id</td><td class="field-type">uuid</td><td><span class="badge badge-fk">FK</span><span class="badge badge-req">REQ</span></td><td class="field-desc">The order that delivered this product — proves purchase.</td><td class="field-link">cb_orders.id</td></tr>
+        <tr><td class="field-name">rating</td><td class="field-type">integer</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">1–5 stars. Triggers aggregate update to cb_products.rating.</td><td class="field-link">cb_products.rating (computed)</td></tr>
+        <tr><td class="field-name">is_verified_purchase</td><td class="field-type">boolean</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">true if order_id references a delivered order for this product. Shown as "Verified Purchase" badge.</td><td class="field-link">Review display badge</td></tr>
+        <tr><td class="field-name">vendor_reply</td><td class="field-type">text</td><td><span class="badge badge-opt">OPT</span></td><td class="field-desc">Vendor response to the review. Shown below the review on product page.</td><td class="field-link">Product page review section</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ WALKTOTEMPLE ═══ -->
+<section id="wtt" class="app-section">
+  <div class="app-header wtt">
+    <div class="app-icon" style="background:rgba(168,85,247,0.15); color:var(--wtt)">🛕</div>
+    <div>
+      <div class="app-title">WalkToTemple</div>
+      <div class="app-subtitle">Complete Hindu religious ecosystem — pilgrimages, pooja store, trusts, gifting, literature, printing.</div>
+    </div>
+    <div class="app-table-count" style="color:var(--wtt)">22 tables</div>
+  </div>
+
+  <!-- wtt_packages -->
+  <div id="wtt_packages" class="table-card">
+    <div class="table-card-header">
+      <div class="table-color-bar" style="background:var(--wtt)"></div>
+      <div class="table-name">wtt_packages</div>
+      <div class="table-purpose">Pilgrimage packages — the core product of WalkToTemple. Each package is a multi-day temple tour with full itinerary, pricing, and capacity management.</div>
+      <span class="lookups-badge">↑ Referenced by 5 tables</span>
+    </div>
+    <table class="field-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Flags</th><th>What it stores</th><th>Linked to / Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">id</td><td class="field-type">uuid</td><td><span class="badge badge-pk">PK</span></td><td class="field-desc">Unique package ID.</td><td class="field-link">wtt_itinerary_days, wtt_departure_dates, wtt_pickup_points, wtt_bookings, wtt_reviews</td></tr>
+        <tr><td class="field-name">slug</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span><span class="badge badge-idx">IDX</span></td><td class="field-desc">URL slug for /packages/[slug] route.</td><td class="field-link">Frontend routing</td></tr>
+        <tr><td class="field-name">card_size</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">sm | md | lg | xl. Controls card dimensions on listing page. SM = 1-2 temples, XL = 6+ temples spanning full width.</td><td class="field-link">Package card component sizing logic</td></tr>
+        <tr><td class="field-name">deity_types</td><td class="field-type">text[]</td><td><span class="badge badge-arr">ARRAY</span></td><td class="field-desc">["shiva", "vishnu", "devi"]. Drives filtering when user clicks deity pills in secondary nav.</td><td class="field-link">Deity secondary nav filter</td></tr>
+        <tr><td class="field-name">temple_type</td><td class="field-type">text[]</td><td><span class="badge badge-arr">ARRAY</span></td><td class="field-desc">["hilltop", "riverside", "forest"]. Drives type filter in secondary nav.</td><td class="field-link">Temple type secondary nav filter</td></tr>
+        <tr><td class="field-name">dham_yatra</td><td class="field-type">varchar</td><td><span class="badge badge-opt">OPT</span></td><td class="field-desc">char-dham | chota-char-dham | panch-kedar etc. Package appears on matching dham yatra page.</td><td class="field-link">Dham yatra page filter</td></tr>
+        <tr><td class="field-name">seasonal_tags</td><td class="field-type">text[]</td><td><span class="badge badge-arr">ARRAY</span></td><td class="field-desc">["karthika", "brahmotsavam"]. Package appears on matching festival season pages.</td><td class="field-link">Festival page filter</td></tr>
+        <tr><td class="field-name">price_per_person / couple / child / senior</td><td class="field-type">decimal</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Four pricing tiers. Booking calculates total from traveller counts × respective prices.</td><td class="field-link">wtt_bookings.total_amount calculation</td></tr>
+      </tbody>
+    </table>
+    <div class="lookup-box">
+      <span class="lookup-label">Looked up by →</span>
+      <span class="lookup-chip">wtt_itinerary_days.package_id</span>
+      <span class="lookup-chip">wtt_departure_dates.package_id</span>
+      <span class="lookup-chip">wtt_pickup_points.package_id</span>
+      <span class="lookup-chip">wtt_bookings.package_id</span>
+      <span class="lookup-chip">wtt_reviews.package_id</span>
+    </div>
+  </div>
+
+  <!-- wtt_bookings -->
+  <div id="wtt_bookings" class="table-card">
+    <div class="table-card-header">
+      <div class="table-color-bar" style="background:var(--wtt)"></div>
+      <div class="table-name">wtt_bookings</div>
+      <div class="table-purpose">Confirmed pilgrimage bookings. Created after successful payment. Links traveller details, pickup point, and departure date into one booking record.</div>
+    </div>
+    <table class="field-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Flags</th><th>What it stores</th><th>Linked to / Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">booking_number</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span><span class="badge badge-idx">IDX</span></td><td class="field-desc">WTT-2026-00001. Shown in confirmation SMS, WhatsApp, and booking dashboard.</td><td class="field-link">Customer dashboard, admin panel</td></tr>
+        <tr><td class="field-name">departure_id</td><td class="field-type">uuid</td><td><span class="badge badge-fk">FK</span><span class="badge badge-req">REQ</span></td><td class="field-desc">Which departure date batch this booking is in. Used to track seat availability.</td><td class="field-link">wtt_departure_dates.id → booked_seats++</td></tr>
+        <tr><td class="field-name">pickup_point_id</td><td class="field-type">uuid</td><td><span class="badge badge-fk">FK</span><span class="badge badge-req">REQ</span></td><td class="field-desc">Where the traveller boards the vehicle. Used to generate pickup manifest for driver.</td><td class="field-link">wtt_pickup_points.id</td></tr>
+        <tr><td class="field-name">adult_count / child_count / senior_count</td><td class="field-type">integer</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Group composition. Used with package pricing to calculate total. Also determines seat count deducted from departure.</td><td class="field-link">Seat availability, pricing calc</td></tr>
+        <tr><td class="field-name">razorpay_order_id / payment_id</td><td class="field-type">varchar</td><td><span class="badge badge-opt">OPT</span></td><td class="field-desc">Payment gateway IDs. Stored for refund processing and payment verification.</td><td class="field-link">6icube-payments refund flow</td></tr>
+      </tbody>
+    </table>
+    <div class="lookup-box">
+      <span class="lookup-label">Looked up by →</span>
+      <span class="lookup-chip">wtt_travellers.booking_id</span>
+      <span class="lookup-chip">wtt_reviews.booking_id</span>
+      <span class="lookup-chip">notifications (booking updates)</span>
+    </div>
+  </div>
+
+  <!-- wtt_trusts -->
+  <div id="wtt_trusts" class="table-card">
+    <div class="table-card-header">
+      <div class="table-color-bar" style="background:var(--wtt)"></div>
+      <div class="table-name">wtt_trusts</div>
+      <div class="table-purpose">Verified temple trusts accepting donations. Admin adds and verifies trusts. Each trust has multiple donation types (seva types).</div>
+    </div>
+    <table class="field-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Flags</th><th>What it stores</th><th>Linked to / Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">id</td><td class="field-type">uuid</td><td><span class="badge badge-pk">PK</span></td><td class="field-desc">Trust ID.</td><td class="field-link">wtt_donation_types.trust_id, wtt_donations.trust_id</td></tr>
+        <tr><td class="field-name">slug</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span><span class="badge badge-idx">IDX</span></td><td class="field-desc">ttd | srisailam | yadadri etc. Maps to /trusts/[slug] route.</td><td class="field-link">Frontend routing, secondary nav filter</td></tr>
+        <tr><td class="field-name">is_80g_eligible</td><td class="field-type">boolean</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Whether donations qualify for Section 80G tax exemption. If true, PAN capture required from donor.</td><td class="field-link">Donation form PAN field toggle, certificate generation</td></tr>
+        <tr><td class="field-name">pan_number</td><td class="field-type">varchar</td><td><span class="badge badge-opt">OPT</span></td><td class="field-desc">Trust's PAN — printed on 80G certificate issued to donor.</td><td class="field-link">80G certificate PDF generation</td></tr>
+      </tbody>
+    </table>
+    <div class="lookup-box">
+      <span class="lookup-label">Looked up by →</span>
+      <span class="lookup-chip">wtt_donation_types.trust_id</span>
+      <span class="lookup-chip">wtt_donations.trust_id</span>
+    </div>
+  </div>
+
+  <!-- wtt_donations -->
+  <div id="wtt_donations" class="table-card">
+    <div class="table-card-header">
+      <div class="table-color-bar" style="background:var(--wtt)"></div>
+      <div class="table-name">wtt_donations</div>
+      <div class="table-purpose">Individual donation transactions. Each row is one donor giving to one seva type at one trust. 80G certificate URL stored here after generation.</div>
+    </div>
+    <table class="field-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Flags</th><th>What it stores</th><th>Linked to / Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">donation_number</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Human-readable reference shown in 80G certificate and donor dashboard.</td><td class="field-link">Donor dashboard, certificate</td></tr>
+        <tr><td class="field-name">trust_id / donation_type_id</td><td class="field-type">uuid</td><td><span class="badge badge-fk">FK</span><span class="badge badge-req">REQ</span></td><td class="field-desc">Which trust and which seva type received this donation.</td><td class="field-link">wtt_trusts.id, wtt_donation_types.id</td></tr>
+        <tr><td class="field-name">donor_pan</td><td class="field-type">varchar</td><td><span class="badge badge-opt">OPT</span></td><td class="field-desc">Donor PAN for 80G certificate. Only collected if trust.is_80g_eligible = true.</td><td class="field-link">80G certificate generation</td></tr>
+        <tr><td class="field-name">certificate_url</td><td class="field-type">varchar</td><td><span class="badge badge-opt">OPT</span></td><td class="field-desc">Cloudflare R2 URL to generated 80G PDF. Emailed to donor and stored for download.</td><td class="field-link">Donor dashboard download, notification email</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ TRAVENZZ ═══ -->
+<section id="trz" class="app-section">
+  <div class="app-header trz">
+    <div class="app-icon" style="background:rgba(34,197,94,0.15); color:var(--trz)">🌿</div>
+    <div>
+      <div class="app-title">Travenzz</div>
+      <div class="app-subtitle">Nature experiences platform — curated packages + DIY Plan Your Experience + tribal marketplace.</div>
+    </div>
+    <div class="app-table-count" style="color:var(--trz)">17 tables</div>
+  </div>
+
+  <!-- trz_packages -->
+  <div id="trz_packages" class="table-card">
+    <div class="table-card-header">
+      <div class="table-color-bar" style="background:var(--trz)"></div>
+      <div class="table-name">trz_packages</div>
+      <div class="table-purpose">Travenzz-curated nature experience packages. Tag system drives all page filters — activity type, region, season, difficulty, group type. One package can appear on multiple filter pages.</div>
+      <span class="lookups-badge">↑ Referenced by 5 tables</span>
+    </div>
+    <table class="field-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Flags</th><th>What it stores</th><th>Linked to / Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">experience_type</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span><span class="badge badge-idx">IDX</span></td><td class="field-desc">waterfall | forest | wildlife | hill-station | river | cave | tribal | camping. Primary tag driving /nature/[type] pages.</td><td class="field-link">Nature type page filter</td></tr>
+        <tr><td class="field-name">activity_types</td><td class="field-type">text[]</td><td><span class="badge badge-arr">ARRAY</span></td><td class="field-desc">["trekking", "camping", "birdwatching"]. Package appears on all matched /activity/[type] pages.</td><td class="field-link">Activity page filter</td></tr>
+        <tr><td class="field-name">difficulty_level</td><td class="field-type">varchar</td><td><span class="badge badge-opt">OPT</span></td><td class="field-desc">easy | moderate | challenging | expert. Drives secondary nav difficulty filter on activity pages.</td><td class="field-link">Difficulty secondary nav filter</td></tr>
+        <tr><td class="field-name">region</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span><span class="badge badge-idx">IDX</span></td><td class="field-desc">araku-valley | lambasingi | papikondalu etc. Must match trz_region_pages.slug. Drives /region/[slug] page.</td><td class="field-link">trz_region_pages.slug, region page filter</td></tr>
+        <tr><td class="field-name">best_seasons</td><td class="field-type">text[]</td><td><span class="badge badge-arr">ARRAY</span></td><td class="field-desc">["peak-monsoon", "early-winter"]. Package appears on matched /seasonal/[season] pages. Must match trz_seasonal_pages.slug.</td><td class="field-link">trz_seasonal_pages.slug, seasonal page filter</td></tr>
+        <tr><td class="field-name">is_workation</td><td class="field-type">boolean</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">If true, appears on /workation page. Must also store wifi_speed for workation display.</td><td class="field-link">/workation page filter</td></tr>
+        <tr><td class="field-name">nearby_temple</td><td class="field-type">varchar</td><td><span class="badge badge-opt">OPT</span></td><td class="field-desc">Optional. Temple near this experience — shown as secondary info, never primary. e.g., "Manthralayam (90km)".</td><td class="field-link">Package detail "Nearby" section</td></tr>
+        <tr><td class="field-name">what_to_pack</td><td class="field-type">text[]</td><td><span class="badge badge-arr">ARRAY</span></td><td class="field-desc">Packing list for this specific experience. Also drives marketplace cross-sell: "Buy these for this trip".</td><td class="field-link">Marketplace cross-sell on package detail</td></tr>
+      </tbody>
+    </table>
+    <div class="lookup-box">
+      <span class="lookup-label">Looked up by →</span>
+      <span class="lookup-chip">trz_itinerary_days.package_id</span>
+      <span class="lookup-chip">trz_departure_dates.package_id</span>
+      <span class="lookup-chip">trz_pickup_points.package_id</span>
+      <span class="lookup-chip">trz_bookings.package_id</span>
+      <span class="lookup-chip">trz_reviews.package_id</span>
+    </div>
+  </div>
+
+  <!-- trz_hotels -->
+  <div id="trz_hotels" class="table-card">
+    <div class="table-card-header">
+      <div class="table-color-bar" style="background:var(--trz)"></div>
+      <div class="table-name">trz_hotels</div>
+      <div class="table-purpose">Hotels, homestays, forest lodges, and glamping sites for the Plan Your Experience DIY section. Users browsing /plan/hotels filter by type and season.</div>
+    </div>
+    <table class="field-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Flags</th><th>What it stores</th><th>Linked to / Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">type</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span><span class="badge badge-idx">IDX</span></td><td class="field-desc">hotel | homestay | forest-lodge | glamping | camping. Drives secondary nav filter on /plan/hotels.</td><td class="field-link">/plan/hotels secondary nav filter</td></tr>
+        <tr><td class="field-name">region</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span><span class="badge badge-idx">IDX</span></td><td class="field-desc">Must match trz_region_pages.slug. When user clicks region pill → shows hotels in that region.</td><td class="field-link">Region filter on /plan/hotels</td></tr>
+        <tr><td class="field-name">seasons_available</td><td class="field-type">text[]</td><td><span class="badge badge-arr">ARRAY</span></td><td class="field-desc">["peak-monsoon", "peak-winter"]. Drives filter on /plan/seasonal when user clicks a season pill — shows only hotels open that season.</td><td class="field-link">/plan/seasonal season filter</td></tr>
+        <tr><td class="field-name">wifi_available</td><td class="field-type">boolean</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">True = appears in /plan/workation results as a workation-ready property.</td><td class="field-link">/plan/workation filter</td></tr>
+        <tr><td class="field-name">booking_url</td><td class="field-type">varchar</td><td><span class="badge badge-opt">OPT</span></td><td class="field-desc">External booking link (OYO, Airbnb, direct) or own booking flow. Commission earned on redirect.</td><td class="field-link">Hotel detail CTA button</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- trz_marketplace_products -->
+  <div id="trz_marketplace_products" class="table-card">
+    <div class="table-card-header">
+      <div class="table-color-bar" style="background:var(--trz)"></div>
+      <div class="table-name">trz_marketplace_products</div>
+      <div class="table-purpose">Travel gear and tribal/village crafts. Two distinct purposes: help travellers prepare for trips + give tribal artisans a sales channel. is_tribal_craft flag separates these.</div>
+    </div>
+    <table class="field-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Flags</th><th>What it stores</th><th>Linked to / Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">category</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span><span class="badge badge-idx">IDX</span></td><td class="field-desc">trekking-gear | camping-gear | tribal-art | textiles | bamboo | pottery | jewellery | woodcraft | natural. Drives /marketplace/[category] pages.</td><td class="field-link">Marketplace category page filter</td></tr>
+        <tr><td class="field-name">is_tribal_craft</td><td class="field-type">boolean</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Separates travel gear (false) from tribal crafts (true). Tribal crafts get special "Artisan Story" section on product detail.</td><td class="field-link">Marketplace secondary nav [Tribal Crafts] filter</td></tr>
+        <tr><td class="field-name">artisan_name / village / tribe</td><td class="field-type">varchar</td><td><span class="badge badge-opt">OPT</span></td><td class="field-desc">For tribal craft products only. Artisan identity shown on product page to humanize the purchase.</td><td class="field-link">Product detail "Meet the Artisan" section</td></tr>
+      </tbody>
+    </table>
+    <div class="lookup-box">
+      <span class="lookup-label">Looked up by →</span>
+      <span class="lookup-chip">trz_marketplace_orders (via order items)</span>
+      <span class="lookup-chip">Package detail cross-sell (what_to_pack match)</span>
+    </div>
+  </div>
+
+  <!-- trz_seasonal_pages -->
+  <div id="trz_seasonal_pages" class="table-card">
+    <div class="table-card-header">
+      <div class="table-color-bar" style="background:var(--trz)"></div>
+      <div class="table-name">trz_seasonal_pages</div>
+      <div class="table-purpose">Content table for the 7 season pages. Stores the marketing copy, packing advice, and warnings per season. Packages reference these slugs via best_seasons[].</div>
+    </div>
+    <table class="field-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Flags</th><th>What it stores</th><th>Linked to / Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">slug</td><td class="field-type">varchar</td><td><span class="badge badge-pk">PK</span><span class="badge badge-idx">IDX</span></td><td class="field-desc">peak-monsoon | early-winter etc. Must exactly match values stored in trz_packages.best_seasons[] array.</td><td class="field-link">trz_packages.best_seasons[] filter query</td></tr>
+        <tr><td class="field-name">months</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">"July to September". Shown on season page hero and secondary nav pills.</td><td class="field-link">Season page hero</td></tr>
+        <tr><td class="field-name">best_for</td><td class="field-type">text[]</td><td><span class="badge badge-arr">ARRAY</span></td><td class="field-desc">["Waterfalls", "Photography"]. Shown as tags on season page to help users understand what to do that season.</td><td class="field-link">Season page "Best for" tags</td></tr>
+        <tr><td class="field-name">warnings</td><td class="field-type">text[]</td><td><span class="badge badge-arr">ARRAY</span></td><td class="field-desc">Safety notes: "Some trekking trails closed during peak monsoon". Shown as warning banners.</td><td class="field-link">Season page warning banner</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ TALENZZ ═══ -->
+<section id="tal" class="app-section">
+  <div class="app-header tal">
+    <div class="app-icon" style="background:rgba(59,130,246,0.15); color:var(--tal)">🎯</div>
+    <div>
+      <div class="app-title">Talenzz</div>
+      <div class="app-subtitle">Career intelligence platform — job-specific interview prep, company intelligence, recruiter platform, referral network.</div>
+    </div>
+    <div class="app-table-count" style="color:var(--tal)">16 tables</div>
+  </div>
+
+  <!-- tal_profiles -->
+  <div id="tal_profiles" class="table-card">
+    <div class="table-card-header">
+      <div class="table-color-bar" style="background:var(--tal)"></div>
+      <div class="table-name">tal_profiles</div>
+      <div class="table-purpose">Job seeker profile — the central intelligence record. Stores career details, skill tags, target preferences, and computed scores. Recruiters search and view these.</div>
+      <span class="lookups-badge">↑ Referenced by 5 tables</span>
+    </div>
+    <table class="field-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Flags</th><th>What it stores</th><th>Linked to / Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">id</td><td class="field-type">uuid</td><td><span class="badge badge-pk">PK</span></td><td class="field-desc">Profile ID.</td><td class="field-link">tal_prep_sessions, tal_mock_interviews, tal_candidate_views, tal_outreach_messages, tal_score_history</td></tr>
+        <tr><td class="field-name">user_id</td><td class="field-type">uuid</td><td><span class="badge badge-fk">FK</span><span class="badge badge-req">REQ</span></td><td class="field-desc">Links to users.id. Profile is created automatically on first login.</td><td class="field-link">users.id</td></tr>
+        <tr><td class="field-name">skills</td><td class="field-type">text[]</td><td><span class="badge badge-arr">ARRAY</span><span class="badge badge-idx">IDX</span></td><td class="field-desc">["React", "Node.js", "PostgreSQL"]. Used in recruiter search filters. Must be normalized tags not free text.</td><td class="field-link">tal_recruiter_searches.filters (skills)</td></tr>
+        <tr><td class="field-name">company_type_targets</td><td class="field-type">text[]</td><td><span class="badge badge-arr">ARRAY</span></td><td class="field-desc">["product", "faang", "gcc"]. Drives which company type interview prep plan is generated for the user.</td><td class="field-link">tal_prep_sessions company type selection</td></tr>
+        <tr><td class="field-name">score_overall / dsa / system_design / domain</td><td class="field-type">decimal</td><td><span class="badge badge-idx">IDX</span></td><td class="field-desc">Computed Talenzz intelligence scores. Updated after each prep session and mock interview. Recruiters filter by score_overall minimum.</td><td class="field-link">tal_recruiter_searches.filters (score_min), tal_score_history</td></tr>
+        <tr><td class="field-name">visibility</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">public | private | recruiters-only. Controls whether profile appears in recruiter searches. Also controls who can see full resume URL.</td><td class="field-link">Recruiter search query filter</td></tr>
+      </tbody>
+    </table>
+    <div class="lookup-box">
+      <span class="lookup-label">Looked up by →</span>
+      <span class="lookup-chip">tal_prep_sessions (profile implied via user_id)</span>
+      <span class="lookup-chip">tal_candidate_views.profile_id</span>
+      <span class="lookup-chip">tal_outreach_messages.profile_id</span>
+      <span class="lookup-chip">tal_score_history.profile_id</span>
+    </div>
+  </div>
+
+  <!-- tal_jobs -->
+  <div id="tal_jobs" class="table-card">
+    <div class="table-card-header">
+      <div class="table-color-bar" style="background:var(--tal)"></div>
+      <div class="table-name">tal_jobs</div>
+      <div class="table-purpose">Live job listings aggregated from multiple sources. company_type field is critical — it determines which interview prep plan is generated when a user clicks "Prepare for this job".</div>
+    </div>
+    <table class="field-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Flags</th><th>What it stores</th><th>Linked to / Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">id</td><td class="field-type">uuid</td><td><span class="badge badge-pk">PK</span></td><td class="field-desc">Job ID.</td><td class="field-link">tal_prep_sessions.job_id</td></tr>
+        <tr><td class="field-name">company_type</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span><span class="badge badge-idx">IDX</span></td><td class="field-desc">service | product | gcc | faang | ai-first | bfsi. The most important field — determines prep plan structure (rounds, depth, focus areas) when user starts prep for this job.</td><td class="field-link">tal_prep_sessions — drives prep plan generation, tal_company_intel lookup</td></tr>
+        <tr><td class="field-name">affiliate_url</td><td class="field-type">varchar</td><td><span class="badge badge-opt">OPT</span></td><td class="field-desc">Affiliate tracking URL for job application. Revenue earned when user clicks "Apply" and gets tracked to the source job board.</td><td class="field-link">Job listing "Apply" CTA button</td></tr>
+        <tr><td class="field-name">source</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">naukri | linkedin | direct | affiliate. Tracks where the job was sourced for deduplication and attribution.</td><td class="field-link">Job aggregation pipeline</td></tr>
+      </tbody>
+    </table>
+    <div class="lookup-box">
+      <span class="lookup-label">Looked up by →</span>
+      <span class="lookup-chip">tal_prep_sessions.job_id</span>
+    </div>
+  </div>
+
+  <!-- tal_prep_sessions -->
+  <div id="tal_prep_sessions" class="table-card">
+    <div class="table-card-header">
+      <div class="table-color-bar" style="background:var(--tal)"></div>
+      <div class="table-name">tal_prep_sessions</div>
+      <div class="table-purpose">An active interview preparation session for a specific company type or job. Tracks overall confidence score — real interview mode triggers automatically when score reaches 70.</div>
+    </div>
+    <table class="field-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Flags</th><th>What it stores</th><th>Linked to / Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">job_id</td><td class="field-type">uuid</td><td><span class="badge badge-fk">FK</span><span class="badge badge-opt">OPT</span></td><td class="field-desc">Nullable — session can be for a general company type without a specific job. If set, prep is JD-specific.</td><td class="field-link">tal_jobs.id</td></tr>
+        <tr><td class="field-name">prep_mode</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">practice | mock | real. practice = free. mock = ₹499. real = triggered by 70% confidence threshold automatically.</td><td class="field-link">Session UI mode toggle, payment gate for mock</td></tr>
+        <tr><td class="field-name">confidence_score</td><td class="field-type">decimal</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">0–100. Aggregated from individual question scores. When this reaches 70, real interview agent is unlocked.</td><td class="field-link">Real interview trigger gate, progress bar UI</td></tr>
+        <tr><td class="field-name">company_type</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Copied from job.company_type or manually selected. Determines question bank and round structure used.</td><td class="field-link">tal_company_intel.company_type — question pattern lookup</td></tr>
+      </tbody>
+    </table>
+    <div class="lookup-box">
+      <span class="lookup-label">Looked up by →</span>
+      <span class="lookup-chip">tal_prep_questions.session_id</span>
+    </div>
+  </div>
+
+  <!-- tal_company_intel -->
+  <div id="tal_company_intel" class="table-card">
+    <div class="table-card-header">
+      <div class="table-color-bar" style="background:var(--tal)"></div>
+      <div class="table-name">tal_company_intel</div>
+      <div class="table-purpose">Crowdsourced and researched intelligence about how each company type interviews. Drives the prep plan structure — number of rounds, focus areas, difficulty. Admin curates this data.</div>
+    </div>
+    <table class="field-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Flags</th><th>What it stores</th><th>Linked to / Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">company_type</td><td class="field-type">varchar</td><td><span class="badge badge-req">REQ</span><span class="badge badge-idx">IDX</span></td><td class="field-desc">service | product | gcc | faang | bfsi. Matches tal_jobs.company_type and tal_prep_sessions.company_type for lookup.</td><td class="field-link">tal_prep_sessions company_type → look up this table for round structure</td></tr>
+        <tr><td class="field-name">interview_rounds</td><td class="field-type">jsonb</td><td><span class="badge badge-arr">JSON</span></td><td class="field-desc">[{round: 1, type: "dsa", duration: 60}, {round: 2, type: "system-design"}]. Drives prep plan generation — which topics to cover in which order.</td><td class="field-link">Prep plan generator, session round structure</td></tr>
+        <tr><td class="field-name">interview_focus</td><td class="field-type">text[]</td><td><span class="badge badge-arr">ARRAY</span></td><td class="field-desc">["hard-dsa", "system-design", "leadership"]. Used to weight question selection in prep sessions.</td><td class="field-link">Question bank topic weighting</td></tr>
+        <tr><td class="field-name">avg_package_lpa</td><td class="field-type">decimal</td><td><span class="badge badge-opt">OPT</span></td><td class="field-desc">Average salary for this company type. Shown on company type landing pages ("GCC pays avg ₹18 LPA").</td><td class="field-link">Company type page salary display</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- tal_recruiters -->
+  <div id="tal_recruiters" class="table-card">
+    <div class="table-card-header">
+      <div class="table-color-bar" style="background:var(--tal)"></div>
+      <div class="table-name">tal_recruiters</div>
+      <div class="table-purpose">Companies and HR teams who pay for access to candidate profiles. Credit-based model — each profile view consumes credits. Recruiter buys credit packs via Razorpay.</div>
+    </div>
+    <table class="field-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Flags</th><th>What it stores</th><th>Linked to / Used by</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">user_id</td><td class="field-type">uuid</td><td><span class="badge badge-fk">FK</span><span class="badge badge-req">REQ</span></td><td class="field-desc">HR person's user account. Role = recruiter.</td><td class="field-link">users.id</td></tr>
+        <tr><td class="field-name">credits_balance</td><td class="field-type">integer</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Current credit balance. Decremented by 1 per profile view. When 0, recruiter is prompted to buy more.</td><td class="field-link">tal_candidate_views (debit on view), tal_payments (credit on purchase)</td></tr>
+        <tr><td class="field-name">is_verified</td><td class="field-type">boolean</td><td><span class="badge badge-req">REQ</span></td><td class="field-desc">Admin verifies company email domain before recruiter can search profiles. Prevents fake recruiter accounts.</td><td class="field-link">Profile search access gate</td></tr>
+      </tbody>
+    </table>
+    <div class="lookup-box">
+      <span class="lookup-label">Looked up by →</span>
+      <span class="lookup-chip">tal_recruiter_searches.recruiter_id</span>
+      <span class="lookup-chip">tal_candidate_views.recruiter_id</span>
+      <span class="lookup-chip">tal_outreach_messages.recruiter_id</span>
+    </div>
+  </div>
+</section>
+
+<!-- RELATIONSHIP SUMMARY -->
+<section class="rel-section">
+  <div class="rel-title">Key Cross-Table Relationships</div>
+  <div class="rel-grid">
+    <div class="rel-card">
+      <div class="rel-card-title" style="color:var(--cb)">CrunchBasket Flow</div>
+      <div class="rel-row"><span class="rel-from">users</span><span class="rel-arrow">→</span><span class="rel-to">cb_vendors</span><span class="rel-type">1:1</span></div>
+      <div class="rel-row"><span class="rel-from">cb_vendors</span><span class="rel-arrow">→</span><span class="rel-to">cb_products</span><span class="rel-type">1:many</span></div>
+      <div class="rel-row"><span class="rel-from">cb_products</span><span class="rel-arrow">→</span><span class="rel-to">cb_product_variants</span><span class="rel-type">1:many</span></div>
+      <div class="rel-row"><span class="rel-from">cb_cart_items</span><span class="rel-arrow">→</span><span class="rel-to">cb_products + variants</span><span class="rel-type">many:1</span></div>
+      <div class="rel-row"><span class="rel-from">cb_orders</span><span class="rel-arrow">→</span><span class="rel-to">cb_order_items</span><span class="rel-type">1:many</span></div>
+      <div class="rel-row"><span class="rel-from">cb_products.region</span><span class="rel-arrow">→</span><span class="rel-to">cb_regional_pages.slug</span><span class="rel-type">tag match</span></div>
+      <div class="rel-row"><span class="rel-from">cb_products.festival_tags[]</span><span class="rel-arrow">→</span><span class="rel-to">cb_festival_pages.slug</span><span class="rel-type">array match</span></div>
+    </div>
+    <div class="rel-card">
+      <div class="rel-card-title" style="color:var(--wtt)">WalkToTemple Flow</div>
+      <div class="rel-row"><span class="rel-from">wtt_packages</span><span class="rel-arrow">→</span><span class="rel-to">wtt_itinerary_days</span><span class="rel-type">1:many</span></div>
+      <div class="rel-row"><span class="rel-from">wtt_itinerary_days</span><span class="rel-arrow">→</span><span class="rel-to">wtt_itinerary_activities</span><span class="rel-type">1:many</span></div>
+      <div class="rel-row"><span class="rel-from">wtt_packages</span><span class="rel-arrow">→</span><span class="rel-to">wtt_departure_dates</span><span class="rel-type">1:many</span></div>
+      <div class="rel-row"><span class="rel-from">wtt_bookings</span><span class="rel-arrow">→</span><span class="rel-to">wtt_travellers</span><span class="rel-type">1:many</span></div>
+      <div class="rel-row"><span class="rel-from">wtt_trusts</span><span class="rel-arrow">→</span><span class="rel-to">wtt_donation_types</span><span class="rel-type">1:many</span></div>
+      <div class="rel-row"><span class="rel-from">wtt_donation_types</span><span class="rel-arrow">→</span><span class="rel-to">wtt_donations</span><span class="rel-type">1:many</span></div>
+    </div>
+    <div class="rel-card">
+      <div class="rel-card-title" style="color:var(--trz)">Travenzz Flow</div>
+      <div class="rel-row"><span class="rel-from">trz_packages</span><span class="rel-arrow">→</span><span class="rel-to">trz_itinerary_days</span><span class="rel-type">1:many</span></div>
+      <div class="rel-row"><span class="rel-from">trz_packages.region</span><span class="rel-arrow">→</span><span class="rel-to">trz_region_pages.slug</span><span class="rel-type">tag match</span></div>
+      <div class="rel-row"><span class="rel-from">trz_packages.best_seasons[]</span><span class="rel-arrow">→</span><span class="rel-to">trz_seasonal_pages.slug</span><span class="rel-type">array match</span></div>
+      <div class="rel-row"><span class="rel-from">trz_bookings</span><span class="rel-arrow">→</span><span class="rel-to">trz_travellers</span><span class="rel-type">1:many</span></div>
+      <div class="rel-row"><span class="rel-from">trz_packages.what_to_pack[]</span><span class="rel-arrow">→</span><span class="rel-to">trz_marketplace_products</span><span class="rel-type">cross-sell</span></div>
+      <div class="rel-row"><span class="rel-from">trz_hotels.seasons_available[]</span><span class="rel-arrow">→</span><span class="rel-to">/plan/seasonal filter</span><span class="rel-type">array match</span></div>
+    </div>
+    <div class="rel-card">
+      <div class="rel-card-title" style="color:var(--tal)">Talenzz Flow</div>
+      <div class="rel-row"><span class="rel-from">users</span><span class="rel-arrow">→</span><span class="rel-to">tal_profiles</span><span class="rel-type">1:1</span></div>
+      <div class="rel-row"><span class="rel-from">tal_jobs.company_type</span><span class="rel-arrow">→</span><span class="rel-to">tal_company_intel</span><span class="rel-type">lookup</span></div>
+      <div class="rel-row"><span class="rel-from">tal_prep_sessions</span><span class="rel-arrow">→</span><span class="rel-to">tal_prep_questions</span><span class="rel-type">1:many</span></div>
+      <div class="rel-row"><span class="rel-from">tal_profiles.score_overall</span><span class="rel-arrow">→</span><span class="rel-to">tal_recruiter_searches</span><span class="rel-type">filter</span></div>
+      <div class="rel-row"><span class="rel-from">tal_recruiters</span><span class="rel-arrow">→</span><span class="rel-to">tal_candidate_views</span><span class="rel-type">credit debit</span></div>
+      <div class="rel-row"><span class="rel-from">confidence_score ≥ 70</span><span class="rel-arrow">→</span><span class="rel-to">real interview unlocked</span><span class="rel-type">business rule</span></div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// Sidebar active state
+const items = document.querySelectorAll('.sidebar-item')
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      items.forEach(i => i.classList.remove('active'))
+      const id = e.target.id
+      const match = document.querySelector(`.sidebar-item[href="#${id}"]`)
+      if (match) match.classList.add('active')
+    }
+  })
+}, { threshold: 0.3 })
+
+document.querySelectorAll('.table-card, .app-header').forEach(el => {
+  if (el.id) observer.observe(el)
+})
+</script>
+</body>
+</html>

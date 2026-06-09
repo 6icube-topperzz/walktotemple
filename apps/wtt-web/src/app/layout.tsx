@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import Navbar from '@/components/Navbar'
-import Breadcrumb from '@/components/Breadcrumb'
-import Footer from '@/components/Footer'
+import { ConditionalLayout } from '@/components/ConditionalLayout'
+import { ThemeProvider } from '@6icube/ui'
+import { theme } from '@/theme.config'
 
 export const metadata: Metadata = {
   title: 'WalkToTemple — Sacred Journeys, Simplified',
@@ -14,10 +14,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="te">
       <body className="min-h-screen bg-white text-gray-900">
-        <Navbar />
-        <Breadcrumb />
-        <main>{children}</main>
-        <Footer />
+        <ThemeProvider theme={theme} className="contents">
+          <ConditionalLayout>{children}</ConditionalLayout>
+        </ThemeProvider>
       </body>
     </html>
   )
